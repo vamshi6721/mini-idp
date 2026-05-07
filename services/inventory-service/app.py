@@ -30,19 +30,19 @@ def metrics():
 
     uptime = int(time.time() - start_time)
 
-    data = f'''
+    data = f"""
 # HELP requests_total Total requests
 # TYPE requests_total counter
 requests_total {requests_count}
 
-# HELP uptime_seconds Service uptime
+# HELP uptime_seconds Uptime
 # TYPE uptime_seconds gauge
 uptime_seconds {uptime}
 
 # HELP service_health Service health
 # TYPE service_health gauge
 service_health 1
-'''
+"""
 
     return Response(data, mimetype="text/plain")
 

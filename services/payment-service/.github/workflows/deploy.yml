@@ -1,5 +1,5 @@
 
-name: Deploy payment-service
+name: Terraform Deploy
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build-and-deploy:
+  terraform:
 
     runs-on: ubuntu-latest
 
@@ -17,8 +17,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t payment-service .
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Verify Docker Images
-        run: docker images
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: terraform

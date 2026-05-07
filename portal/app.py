@@ -7,6 +7,14 @@ app = Flask(__name__)
 
 BASE_PORT = 5010
 
+ALLOWED_SERVICES = [
+    "payment-service",
+    "user-service",
+    "inventory-service",
+    "auth-service",
+    "notification-service"
+]
+
 
 def get_free_port():
 
@@ -30,36 +38,103 @@ def get_free_port():
 def home():
 
     return """
-    <h1>Mini Internal Developer Platform</h1>
+    <html>
 
-    <h3>Select Service</h3>
+    <head>
 
-    <form action="/provision" method="post">
+        <title>Mini Internal Developer Platform</title>
 
-        <select name="service">
+        <style>
 
-            <option>payment-service</option>
-            <option>user-service</option>
-            <option>inventory-service</option>
-            <option>auth-service</option>
-            <option>notification-service</option>
+            body {
 
-        </select>
+                font-family: Arial;
+                background: #0f172a;
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
 
-        <br><br>
+            .card {
 
-        <button type="submit">
-            Provision Service
-        </button>
+                background: #1e293b;
+                padding: 40px;
+                border-radius: 15px;
+                width: 450px;
+                text-align: center;
+            }
 
-    </form>
+            select {
+
+                width: 100%;
+                padding: 12px;
+                margin-top: 20px;
+
+            button {
+
+
+                width: 100%;
+
+                padding: 12px;
+                margin-top: 20px;
+                border: none;
+                border-radius: 8px;
+                background: #2563eb;
+                color: white;
+                cursor: pointer;
+                font-size: 16px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div class="card">
+
+            <h1>Mini Internal Developer Platform</h1>
+
+            <form action="/provision" method="POST">
+
+                <select name="service">
+
+                    <option value="payment-service">payment-service</option>
+
+                    <option value="user-service">user-service</option>
+
+                    <option value="inventory-service">inventory-service</option>
+
+                    <option value="auth-service">auth-service</option>
+
+                    <option value="notification-service">notification-service</option>
+
+                </select>
+
+                <button type="submit">
+                    Provision Service
+                </button>
+
+            </form>
+
+        </div>
+
+    </body>
+
+    </html>
     """
 
 
 @app.route("/provision", methods=["POST"])
 def provision():
 
-    service = request.form["service"]
+    service = request.form.get("service")
+
+    if service not in ALLOWED_SERVICES:
+
+        return "Unauthorized service request"
 
     host = request.host.split(":")[0]
 
@@ -75,7 +150,7 @@ def provision():
 
     os.makedirs(service_path, exist_ok=True)
 
-    app_code = f"""
+    app_code = f'''
 from flask import Flask, Response
 import time
 
@@ -107,25 +182,25 @@ def metrics():
 
     uptime = int(time.time() - start_time)
 
-    data = f'''
+    data = f"""
 # HELP requests_total Total requests
 # TYPE requests_total counter
 requests_total {{requests_count}}
 
-# HELP uptime_seconds Service uptime
+# HELP uptime_seconds Uptime
 # TYPE uptime_seconds gauge
 uptime_seconds {{uptime}}
 
 # HELP service_health Service health
 # TYPE service_health gauge
 service_health 1
-'''
+"""
 
     return Response(data, mimetype="text/plain")
 
 
 app.run(host="0.0.0.0", port={port})
-"""
+'''
 
     with open(f"{service_path}/app.py", "w") as f:
         f.write(app_code)
@@ -152,8 +227,8 @@ CMD ["python", "app.py"]
 
     os.makedirs(github_dir, exist_ok=True)
 
-    github_actions = f"""
-name: Deploy {service}
+    github_actions = """
+name: CI Pipeline
 
 on:
   push:
@@ -162,76 +237,61 @@ on:
 
 jobs:
 
-  build-and-deploy:
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t {service} .
-
-      - name: Verify Docker Images
-        run: docker images
+      - run: docker build -t app .
 """
 
     with open(f"{github_dir}/deploy.yml", "w") as f:
-
         f.write(github_actions)
 
-
     subprocess.run(
-
         ["docker", "build", "-t", service, service_path]
-
     )
-
 
     subprocess.run(
         [
-
             "docker",
             "run",
-
             "-d",
             "--name",
-
             service,
+            "--label",
+            "platform=mini-idp",
             "-p",
-
             f"{port}:{port}",
             service
-
         ]
     )
 
-
     nginx_route = f"""
 
-
 location /services/{service} {{
-
 
     proxy_pass http://172.17.0.1:{port};
 
 }}
 
-
 """
 
+    with open("gateway/dynamic.conf", "r") as f:
 
-    with open("gateway/dynamic.conf", "a") as f:
-        f.write(nginx_route)
+        existing = f.read()
 
+    if f"/services/{service}" not in existing:
+
+        with open("gateway/dynamic.conf", "a") as f:
+            f.write(nginx_route)
 
     prometheus_job = f"""
 
-
   - job_name: "{service}"
-
 
     static_configs:
 
@@ -239,56 +299,109 @@ location /services/{service} {{
 
 """
 
-    with open("monitoring/prometheus.yml", "a") as f:
-        f.write(prometheus_job)
+    with open("monitoring/prometheus.yml", "r") as f:
+
+        existing = f.read()
+
+    if f'job_name: "{service}"' not in existing:
+
+        with open("monitoring/prometheus.yml", "a") as f:
+            f.write(prometheus_job)
+
+    subprocess.run(
+        ["docker", "exec", "mini-idp-nginx-1", "nginx", "-s", "reload"]
+    )
+
+    subprocess.run(
+        ["docker", "restart", "mini-idp-prometheus-1"]
+    )
 
     return f"""
-    <h1>SERVICE CREATED SUCCESSFULLY</h1>
+    <html>
 
-    <p>Service: {service}</p>
+    <head>
 
-    <p>Port: {port}</p>
+        <style>
 
-    <p>
-    <a href="http://{host}/services/{service}">
-    Open Service
-    </a>
-    </p>
+            body {{
 
-    <p>
-    <a href="http://{host}:{port}/metrics">
-    Metrics
-    </a>
-    </p>
+                font-family: Arial;
+                background: #0f172a;
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }}
 
-    <p>
-    <a href="http://{host}:{port}/health">
+            .card {{
 
-    Health
-    </a>
+                background: #1e293b;
+                padding: 40px;
+                border-radius: 15px;
+                width: 500px;
+                text-align: center;
+            }}
 
-    </p>
+            a {{
 
+                display: block;
+                background: #2563eb;
+                color: white;
+                padding: 12px;
+                margin-top: 15px;
+                text-decoration: none;
+                border-radius: 8px;
+            }}
 
-    <h3>CI/CD Pipeline Generated</h3>
+        </style>
 
+    </head>
 
-    <p>
-    .github/workflows/deploy.yml
+    <body>
 
-    </p>
+        <div class="card">
 
+            <h1>🚀 SERVICE CREATED SUCCESSFULLY</h1>
 
-    <pre>
+            <h2>{service}</h2>
 
-docker exec mini-idp-nginx-1 nginx -s reload
+            <h3>Port: {port}</h3>
 
+            <a href="http://{host}/services/{service}">
+                Open Service
+            </a>
 
-docker restart mini-idp-prometheus-1
+            <a href="http://{host}:{port}/metrics">
+                Metrics
+            </a>
 
-    </pre>
+            <a href="http://{host}:{port}/health">
+                Health
+            </a>
+
+            <h3>✅ Governance Automation Enabled</h3>
+
+            <h3>✅ Terraform Templates Added</h3>
+
+            <h3>✅ CI/CD Pipeline Generated</h3>
+
+            <h3>✅ Observability Enabled</h3>
+
+        </div>
+
+    </body>
+
+    </html>
     """
 
+
+@app.route("/cleanup/<service>")
+def cleanup(service):
+
+    subprocess.run(["docker", "rm", "-f", service])
+
+    return f"{service} removed"
 
 
 app.run(host="0.0.0.0", port=5000)

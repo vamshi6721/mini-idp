@@ -1,5 +1,5 @@
 
-name: Deploy auth-service
+name: CI Pipeline
 
 on:
   push:
@@ -8,17 +8,12 @@ on:
 
 jobs:
 
-  build-and-deploy:
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t auth-service .
-
-      - name: Verify Docker Images
-        run: docker images
+      - run: docker build -t app .
