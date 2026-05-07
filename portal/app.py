@@ -71,12 +71,13 @@ def home():
                 width: 100%;
                 padding: 12px;
                 margin-top: 20px;
+                border-radius: 8px;
+                border: none;
+            }
 
             button {
 
-
                 width: 100%;
-
                 padding: 12px;
                 margin-top: 20px;
                 border: none;
@@ -316,6 +317,23 @@ location /services/{service} {{
         ["docker", "restart", "mini-idp-prometheus-1"]
     )
 
+    subprocess.run(
+        ["git", "add", "."]
+    )
+
+    subprocess.run(
+        [
+            "git",
+            "commit",
+            "-m",
+            f"Provisioned {service}"
+        ]
+    )
+
+    subprocess.run(
+        ["git", "push", "origin", "main"]
+    )
+
     return f"""
     <html>
 
@@ -372,7 +390,6 @@ location /services/{service} {{
                 Open Service
             </a>
 
-            <a href="http://{host}:{port}/metrics">
                 Metrics
             </a>
 
@@ -380,11 +397,11 @@ location /services/{service} {{
                 Health
             </a>
 
+            <h3>✅ GitHub Actions Triggered</h3>
+
             <h3>✅ Governance Automation Enabled</h3>
 
             <h3>✅ Terraform Templates Added</h3>
-
-            <h3>✅ CI/CD Pipeline Generated</h3>
 
             <h3>✅ Observability Enabled</h3>
 
