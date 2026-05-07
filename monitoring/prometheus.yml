@@ -3,58 +3,34 @@ global:
 
 scrape_configs:
 
-  - job_name: "auth-service"
+  - job_name: "inventory-service"
 
     static_configs:
       - targets: ["172.17.0.1:5010"]
 
-  - job_name: "notification-service"
+  - job_name: "auth-service"
 
     static_configs:
       - targets: ["172.17.0.1:5011"]
 
-  - job_name: "inventory-service"
+  - job_name: "notification-service"
 
     static_configs:
       - targets: ["172.17.0.1:5012"]
 
-  - job_name: "payment-service"
+  - job_name: "user-service"
 
     static_configs:
       - targets: ["172.17.0.1:5013"]
 
-  - job_name: "user-service"
+  - job_name: "payment-service"
 
     static_configs:
       - targets: ["172.17.0.1:5014"]
 
 
-  - job_name: "inventory-service"
-
-    static_configs:
-      - targets: ["172.17.0.1:5012"]
-
-
 
   - job_name: "inventory-service"
-
-    static_configs:
-      - targets: ["172.17.0.1:5012"]
-
-
-
-
-  - job_name: "user-service"
-
-
-    static_configs:
-
-      - targets: ["172.17.0.1:5013"]
-
-
-
-
-  - job_name: "auth-service"
 
 
     static_configs:

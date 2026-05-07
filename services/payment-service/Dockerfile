@@ -1,10 +1,10 @@
 
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apk add --no-cache py3-flask
-
 COPY . .
 
-CMD ["python3", "app.py"]
+RUN pip install -r requirements.txt
+
+CMD ["python", "app.py"]

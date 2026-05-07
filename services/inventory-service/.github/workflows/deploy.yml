@@ -1,5 +1,5 @@
 
-name: Deploy user-service
+name: Deploy inventory-service
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker Image
-        run: docker build -t user-service .
+        run: docker build -t inventory-service .
 
       - name: Verify Docker Images
         run: docker images
