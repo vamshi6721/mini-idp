@@ -20,7 +20,7 @@ jobs:
         id: detect
         run: |
 
-          SERVICE=$(find services -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1 | xargs basename)
+          SERVICE=$(ls -td services/*/ | head -n 1 | xargs basename)
 
           echo "SERVICE=$SERVICE" >> $GITHUB_ENV
 
