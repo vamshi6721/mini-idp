@@ -39,3 +39,11 @@ scrape_configs:
 
       - targets: ["172.17.0.1:5012"]
 
+
+
+  - job_name: "payment-service"
+
+    static_configs:
+
+      - targets: ["172.17.0.1:5013"]
+

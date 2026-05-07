@@ -1,3 +1,4 @@
+
 from flask import Flask, Response
 import time
 
@@ -34,7 +35,7 @@ def metrics():
 # TYPE requests_total counter
 requests_total {requests_count}
 
-# HELP uptime_seconds Service uptime
+# HELP uptime_seconds Uptime
 # TYPE uptime_seconds gauge
 uptime_seconds {uptime}
 
@@ -44,3 +45,6 @@ service_health 1
 """
 
     return Response(data, mimetype="text/plain")
+
+
+app.run(host="0.0.0.0", port=5013)
