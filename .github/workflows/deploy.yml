@@ -1,0 +1,29 @@
+name: Mini IDP CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Show Files
+        run: ls -R
+
+      - name: Build Auth Service
+        run: docker build -t auth-service ./services/auth-service
+
+      - name: Build User Service
+        run: docker build -t user-service ./services/user-service
+
+      - name: Verify Docker Images
+        run: docker images
