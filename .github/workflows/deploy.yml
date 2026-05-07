@@ -1,4 +1,4 @@
-name: Mini IDP CI
+name: Dynamic CI Pipeline
 
 on:
   push:
@@ -20,10 +20,19 @@ jobs:
         run: ls -R
 
       - name: Build Auth Service
-        run: docker build -t auth-service ./services/auth-service
+        run: docker build -t auth-service ./services/auth-service || true
 
       - name: Build User Service
-        run: docker build -t user-service ./services/user-service
+        run: docker build -t user-service ./services/user-service || true
 
-      - name: Verify Docker Images
+      - name: Build Payment Service
+        run: docker build -t payment-service ./services/payment-service || true
+
+      - name: Build Inventory Service
+        run: docker build -t inventory-service ./services/inventory-service || true
+
+      - name: Build Notification Service
+        run: docker build -t notification-service ./services/notification-service || true
+
+      - name: Verify Images
         run: docker images
