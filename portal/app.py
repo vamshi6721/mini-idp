@@ -228,8 +228,8 @@ CMD ["python", "app.py"]
 
     os.makedirs(github_dir, exist_ok=True)
 
-    github_actions = """
-name: CI Pipeline
+    github_actions = f"""
+name: CI Pipeline {service}
 
 on:
   push:
@@ -238,15 +238,25 @@ on:
 
 jobs:
 
-  build:
+  build-and-test:
 
     runs-on: ubuntu-latest
 
     steps:
 
+      - name: Checkout Repository
+
       - uses: actions/checkout@v4
 
-      - run: docker build -t app .
+      - name: Show Files
+        run: ls -R
+
+      - name: Build Docker Image
+        run:  docker build -t {service} ./services/{service}
+
+      - name: Verify Docker Images
+        run: docker images
+
 """
 
     with open(f"{github_dir}/deploy.yml", "w") as f:
