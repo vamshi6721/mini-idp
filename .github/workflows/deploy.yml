@@ -16,11 +16,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Detect Latest Service
-        id: detect
+      - name: Detect Service From Commit
         run: |
 
-          SERVICE=$(ls -td services/*/ | head -n 1 | xargs basename)
+          SERVICE=$(git log -1 --pretty=%B | cut -d= -f2)
 
           echo "SERVICE=$SERVICE" >> $GITHUB_ENV
 

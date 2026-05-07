@@ -278,7 +278,7 @@ jobs:
             "git",
             "commit",
             "-m",
-            f"Provisioned {service}"
+            f"SERVICE={service}"
         ]
     )
 

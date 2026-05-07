@@ -15,15 +15,13 @@ jobs:
     steps:
 
       - name: Checkout Repository
-
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Show Files
         run: ls -R
 
       - name: Build Docker Image
-        run:  docker build -t inventory-service ./services/inventory-service
+        run: docker build -t inventory-service ./services/inventory-service
 
       - name: Verify Docker Images
         run: docker images
-
