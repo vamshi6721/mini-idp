@@ -16,28 +16,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Detect Changed Service
-        id: changed-service
+      - name: Detect Latest Service
+        id: detect
         run: |
 
-          SERVICE=$(git diff --name-only HEAD~1 HEAD | grep '^services/' | cut -d'/' -f2 | head -n 1)
+          SERVICE=$(find services -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1 | xargs basename)
 
           echo "SERVICE=$SERVICE" >> $GITHUB_ENV
 
-          echo "Changed service: $SERVICE"
+          echo "Detected service: $SERVICE"
 
-      - name: Build Changed Service
+      - name: Build Selected Service
         run: |
 
-          if [ -n "$SERVICE" ]; then
+          docker build -t $SERVICE ./services/$SERVICE
 
-            docker build -t $SERVICE ./services/$SERVICE
-
-          else
-
-            echo "No service changes detected"
-
-          fi
-
-      - name: Verify Images
+      - name: Verify Docker Images
         run: docker images
