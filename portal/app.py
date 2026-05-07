@@ -1,11 +1,8 @@
 from flask import Flask, request, Response
 import os
 import subprocess
-import socket
 
 app = Flask(__name__)
-
-BASE_PORT = 5010
 
 ALLOWED_SERVICES = [
     "payment-service",
@@ -15,23 +12,13 @@ ALLOWED_SERVICES = [
     "notification-service"
 ]
 
-
-def get_free_port():
-
-    port = BASE_PORT
-
-    while True:
-
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        result = s.connect_ex(("localhost", port))
-
-        s.close()
-
-        if result != 0:
-            return port
-
-        port += 1
+SERVICE_PORTS = {
+    "payment-service": 5010,
+    "user-service": 5011,
+    "inventory-service": 5012,
+    "auth-service": 5013,
+    "notification-service": 5014
+}
 
 
 @app.route("/")
@@ -47,7 +34,6 @@ def home():
         <style>
 
             body {
-
                 font-family: Arial;
                 background: #0f172a;
                 color: white;
@@ -58,7 +44,6 @@ def home():
             }
 
             .card {
-
                 background: #1e293b;
                 padding: 40px;
                 border-radius: 15px;
@@ -67,7 +52,6 @@ def home():
             }
 
             select {
-
                 width: 100%;
                 padding: 12px;
                 margin-top: 20px;
@@ -76,7 +60,6 @@ def home():
             }
 
             button {
-
                 width: 100%;
                 padding: 12px;
                 margin-top: 20px;
@@ -134,8 +117,9 @@ def provision():
     service = request.form.get("service")
 
     if service not in ALLOWED_SERVICES:
-
         return "Unauthorized service request"
+
+    port = SERVICE_PORTS[service]
 
     host = request.host.split(":")[0]
 
@@ -144,8 +128,6 @@ def provision():
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
-
-    port = get_free_port()
 
     service_path = f"services/{service}"
 
@@ -245,18 +227,16 @@ jobs:
     steps:
 
       - name: Checkout Repository
-
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Show Files
         run: ls -R
 
       - name: Build Docker Image
-        run:  docker build -t {service} ./services/{service}
+        run: docker build -t {service} ./services/{service}
 
       - name: Verify Docker Images
         run: docker images
-
 """
 
     with open(f"{github_dir}/deploy.yml", "w") as f:
@@ -280,44 +260,6 @@ jobs:
             service
         ]
     )
-
-    nginx_route = f"""
-
-location /services/{service} {{
-
-    proxy_pass http://172.17.0.1:{port};
-
-}}
-
-"""
-
-    with open("gateway/dynamic.conf", "r") as f:
-
-        existing = f.read()
-
-    if f"/services/{service}" not in existing:
-
-        with open("gateway/dynamic.conf", "a") as f:
-            f.write(nginx_route)
-
-    prometheus_job = f"""
-
-  - job_name: "{service}"
-
-    static_configs:
-
-      - targets: ["172.17.0.1:{port}"]
-
-"""
-
-    with open("monitoring/prometheus.yml", "r") as f:
-
-        existing = f.read()
-
-    if f'job_name: "{service}"' not in existing:
-
-        with open("monitoring/prometheus.yml", "a") as f:
-            f.write(prometheus_job)
 
     subprocess.run(
         ["docker", "exec", "mini-idp-nginx-1", "nginx", "-s", "reload"]
@@ -352,7 +294,6 @@ location /services/{service} {{
         <style>
 
             body {{
-
                 font-family: Arial;
                 background: #0f172a;
                 color: white;
@@ -363,7 +304,6 @@ location /services/{service} {{
             }}
 
             .card {{
-
                 background: #1e293b;
                 padding: 40px;
                 border-radius: 15px;
@@ -372,7 +312,6 @@ location /services/{service} {{
             }}
 
             a {{
-
                 display: block;
                 background: #2563eb;
                 color: white;
@@ -400,35 +339,52 @@ location /services/{service} {{
                 Open Service
             </a>
 
+            <a href="http://{host}:{port}/metrics">
                 Metrics
             </a>
 
             <a href="http://{host}:{port}/health">
                 Health
             </a>
-
             <h3>✅ GitHub Actions Triggered</h3>
+
 
             <h3>✅ Governance Automation Enabled</h3>
 
             <h3>✅ Terraform Templates Added</h3>
 
+
             <h3>✅ Observability Enabled</h3>
+
 
         </div>
 
+
     </body>
 
+
     </html>
+
     """
 
 
+
 @app.route("/cleanup/<service>")
+
 def cleanup(service):
 
-    subprocess.run(["docker", "rm", "-f", service])
+
+    subprocess.run(
+        ["docker", "rm", "-f", service],
+
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+
+    )
+
 
     return f"{service} removed"
+
 
 
 app.run(host="0.0.0.0", port=5000)
