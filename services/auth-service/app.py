@@ -1,31 +1,43 @@
 
+
 from flask import Flask, Response
+
 import time
+
 
 app = Flask(__name__)
 
+
 requests_count = 0
+
 
 start_time = time.time()
 
 
+
 @app.route("/")
+
 def home():
 
+
     global requests_count
+
 
     requests_count += 1
 
     return "auth-service running"
 
 
+
 @app.route("/health")
 def health():
+
 
     return "UP"
 
 
 @app.route("/metrics")
+
 def metrics():
 
     uptime = int(time.time() - start_time)
