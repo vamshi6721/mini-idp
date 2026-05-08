@@ -405,7 +405,7 @@ jobs:
         <div class="card">
 
 
-            <h1>🚀 SERVICE CREATED SUCCESSFULLY</h1>
+            <h1> SERVICE CREATED SUCCESSFULLY</h1>
 
 
             <h2>{service}</h2>
@@ -428,14 +428,14 @@ jobs:
                 Health
             </a>
 
-            <h3>✅ GitHub Actions Triggered</h3>
+            <h3> GitHub Actions Triggered</h3>
 
-            <h3>✅ Governance Automation Enabled</h3>
+            <h3> Governance Automation Enabled</h3>
 
-            <h3>✅ Terraform Templates Added</h3>
+            <h3> Terraform Templates Added</h3>
 
 
-            <h3>✅ Observability Enabled</h3>
+            <h3> Observability Enabled</h3>
 
 
         </div>
